@@ -19,6 +19,7 @@ const AppState = {
     back: []
   },
   ui: {
+    editorMode: 'simple', // 'simple' | 'advanced'
     docView: 'front', // 'front' | 'back' | 'mockup3d'
     dockerTab: 'order', // 'order' | 'inspector' | 'layers'
     selectedId: null,
@@ -69,9 +70,13 @@ function applyBusinessCardTemplate(tplId) {
   }
   AppState.order.printSides = 2;
 
-  const comp = document.getElementById('tplAutoCompany').value.trim() || 'ООО «РЕГЛЕТ»';
-  const pers = document.getElementById('tplAutoPerson').value.trim() || 'Александр Смирнов';
-  const phone = document.getElementById('tplAutoPhone').value.trim() || '+7 (495) 123-45-67';
+  const readField = (simpleId, autoId, fallback) => {
+    const el = document.getElementById(AppState.ui.editorMode === 'simple' ? simpleId : autoId);
+    return (el?.value || '').trim() || fallback;
+  };
+  const comp = readField('simpleFieldCompany', 'tplAutoCompany', 'ООО «РЕГЛЕТ»');
+  const pers = readField('simpleFieldPerson', 'tplAutoPerson', 'Александр Смирнов');
+  const phone = readField('simpleFieldContacts', 'tplAutoPhone', '+7 (495) 123-45-67');
 
   const built = tpl.build(comp, pers, phone);
   const dims = getTrimDims();

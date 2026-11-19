@@ -197,13 +197,21 @@ function syncObjectDocker(obj) {
 function syncAll() {
   enforceCompatibility();
   renderOrderDocker();
-  renderDocumentCanvas();
+  if (AppState.ui.editorMode === 'simple') {
+    renderSimplePanels();
+    renderSimpleMode();
+    syncSimpleFieldsFromCanvas();
+  } else {
+    renderDocumentCanvas();
+  }
   renderLayersDocker();
   updatePriceDisplay();
   updateUndoRedoUI();
 }
 
 function bindAllEvents() {
+  bindSimpleModeEvents();
+
   // Переключение вкладок документа: Страница 1, Страница 2, 3D Мокап
   document.querySelectorAll('.doc-tab-btn').forEach(btn => {
     btn.onclick = () => {
@@ -290,48 +298,9 @@ function bindAllEvents() {
     };
   });
 
-  // Импорт фото/логотипа
+  // Импорт фото/логотипа (общий для простого и профессионального режимов)
   document.getElementById('inputImportImage').onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const okTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-    if (!okTypes.includes(file.type)) {
-      showToast('Допустимы форматы JPG, PNG, WebP или SVG.', 'error');
-      return;
-    }
-    if (file.size > REGLET_CONFIG.maxUploadBytes) {
-      showToast('Размер файла превышает 25 МБ.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        pushHistory();
-        const dims = getTrimDims();
-        const nw = img.naturalWidth || 600;
-        const nh = img.naturalHeight || 600;
-        let tw = Math.min(dims.widthMm * 0.45, 42);
-        let th = tw / (nw / nh);
-        if (th > dims.heightMm * 0.7) { th = dims.heightMm * 0.7; tw = th * (nw / nh); }
-
-        const activeSide = AppState.ui.docView === 'back' ? 'back' : 'front';
-        const obj = {
-          id: uid(), type: 'image', name: file.name, src: ev.target.result, isSvg: file.type === 'image/svg+xml',
-          naturalWidth: nw, naturalHeight: nh,
-          xMm: Number(((dims.widthMm - tw) / 2).toFixed(2)), yMm: Number(((dims.heightMm - th) / 2).toFixed(2)),
-          widthMm: Number(tw.toFixed(2)), heightMm: Number(th.toFixed(2)), rotation: 0, visible: true, locked: false
-        };
-        if (AppState.ui.docView === 'mockup3d') AppState.ui.docView = 'front';
-        AppState.sides[activeSide].push(obj);
-        AppState.ui.selectedId = obj.id;
-        renderDocumentCanvas();
-        renderLayersDocker();
-        showToast(`Изображение «${file.name}» добавлено`, 'success');
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+    importImageFile(e.target.files[0]);
     e.target.value = '';
   };
 
@@ -799,5 +768,52 @@ function bindAllEvents() {
   };
 
   document.getElementById('canvasScrollArea').addEventListener('scroll', updateCorelRulers);
-  window.addEventListener('resize', () => { renderDocumentCanvas(); updateCorelRulers(); });
+  window.addEventListener('resize', () => {
+    if (AppState.ui.editorMode === 'simple') renderSimpleMode();
+    else { renderDocumentCanvas(); updateCorelRulers(); }
+  });
+}
+
+/**
+ * Импорт изображения в активную сторону (общий для простого и профессионального режимов).
+ */
+function importImageFile(file) {
+  if (!file) return;
+  const okTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+  if (!okTypes.includes(file.type)) {
+    showToast('Допустимы форматы JPG, PNG, WebP или SVG.', 'error');
+    return;
+  }
+  if (file.size > REGLET_CONFIG.maxUploadBytes) {
+    showToast('Размер файла превышает 25 МБ.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      pushHistory();
+      const dims = getTrimDims();
+      const nw = img.naturalWidth || 600;
+      const nh = img.naturalHeight || 600;
+      let tw = Math.min(dims.widthMm * 0.45, 42);
+      let th = tw / (nw / nh);
+      if (th > dims.heightMm * 0.7) { th = dims.heightMm * 0.7; tw = th * (nw / nh); }
+
+      const activeSide = AppState.ui.docView === 'back' ? 'back' : 'front';
+      const obj = {
+        id: uid(), type: 'image', name: file.name, src: ev.target.result, isSvg: file.type === 'image/svg+xml',
+        naturalWidth: nw, naturalHeight: nh,
+        xMm: Number(((dims.widthMm - tw) / 2).toFixed(2)), yMm: Number(((dims.heightMm - th) / 2).toFixed(2)),
+        widthMm: Number(tw.toFixed(2)), heightMm: Number(th.toFixed(2)), rotation: 0, visible: true, locked: false
+      };
+      if (AppState.ui.docView === 'mockup3d') AppState.ui.docView = 'front';
+      AppState.sides[activeSide].push(obj);
+      AppState.ui.selectedId = obj.id;
+      syncAll();
+      showToast(`Изображение «${file.name}» добавлено`, 'success');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }

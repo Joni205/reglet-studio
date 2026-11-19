@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>РЕГЛЕТ — Онлайн-конструктор печатной продукции (CorelDRAW Workspace)</title>
+  <link rel="icon" href="data:," />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +18,7 @@
   <header class="bg-white border-b border-slate-300 shadow-xs z-40 sticky top-0">
     <!-- Верхняя строка: логотип Реглет, файловые операции, PDF и корзина -->
     <div class="px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-wrap min-w-0">
         <!-- Логотип РЕГЛЕТ -->
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded bg-red-600 text-white font-black flex items-center justify-center text-sm shadow-xs">R</div>
@@ -26,6 +27,12 @@
               РЕГЛЕТ <span class="font-normal text-slate-500 hidden sm:inline">— Онлайн-конструктор печатной продукции</span>
             </div>
           </div>
+        </div>
+
+        <!-- Переключатель режимов: простой (по умолчанию) и профессиональный -->
+        <div class="flex items-center bg-slate-200/90 p-0.5 rounded-lg border border-slate-300" role="tablist" aria-label="Режим конструктора">
+          <button id="btnModeSimple" data-mode="simple" class="px-2.5 py-1 text-xs font-extrabold rounded-md bg-white text-red-700 shadow-xs">✨ Упрощённый</button>
+          <button id="btnModeAdvanced" data-mode="advanced" class="px-2.5 py-1 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900">📐 Профессиональный</button>
         </div>
 
         <div class="h-5 w-px bg-slate-300 hidden md:block"></div>
@@ -54,8 +61,8 @@
             <span>↻ 90°</span>
           </button>
 
-          <!-- Масштаб холста -->
-          <div class="flex items-center bg-white border border-slate-300 rounded overflow-hidden">
+          <!-- Масштаб холста (только профессиональный режим) -->
+          <div class="adv-only flex items-center bg-white border border-slate-300 rounded overflow-hidden">
             <button id="btnZoomOut" title="Уменьшить" class="px-2 py-1 text-xs font-bold hover:bg-slate-100 border-r border-slate-200">−</button>
             <button id="btnZoomReset" title="Сбросить масштаб 100%" class="px-2 py-1 text-xs font-semibold hover:bg-slate-100 w-12 text-center">100%</button>
             <button id="btnZoomIn" title="Увеличить" class="px-2 py-1 text-xs font-bold hover:bg-slate-100 border-l border-slate-200">+</button>
@@ -64,24 +71,24 @@
       </div>
 
       <!-- Правая группа кнопок шапки: Предпросмотр, PDF, Цена и Корзина -->
-      <div class="flex items-center gap-2">
-        <button id="btnOpenPreviewModal" class="px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white rounded shadow-xs flex items-center gap-1.5">
-          <span>👁</span><span>Предпросмотр</span>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnOpenPreviewModal" aria-label="Предпросмотр" class="px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white rounded shadow-xs flex items-center gap-1.5">
+          <span>👁</span><span class="hidden sm:inline">Предпросмотр</span>
         </button>
 
-        <button id="btnDownloadPdfTop" class="px-2.5 py-1.5 text-xs font-bold bg-sky-700 hover:bg-sky-800 text-white rounded shadow-xs flex items-center gap-1.5">
-          <span>📥</span><span>Скачать печатный PDF</span>
+        <button id="btnDownloadPdfTop" aria-label="Скачать печатный PDF" class="px-2.5 py-1.5 text-xs font-bold bg-sky-700 hover:bg-sky-800 text-white rounded shadow-xs flex items-center gap-1.5">
+          <span>📥</span><span class="hidden sm:inline">Скачать печатный PDF</span>
         </button>
 
-        <button id="btnOpenCartModal" class="px-2.5 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded shadow-xs flex items-center gap-1.5">
-          <span>🛒 Корзина</span>
+        <button id="btnOpenCartModal" aria-label="Корзина" class="px-2.5 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded shadow-xs flex items-center gap-1.5">
+          <span>🛒</span><span class="hidden sm:inline">Корзина</span>
           <span id="headerCartBadge" class="bg-white text-red-600 text-[11px] font-extrabold px-1.5 rounded-full">0</span>
         </button>
       </div>
     </div>
 
     <!-- Вторая строка шапки: ДИНАМИЧЕСКАЯ ПАНЕЛЬ СВОЙСТВ CORELDRAW (Property Bar) -->
-    <div id="corelPropertyBar" class="px-3 py-1 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center gap-2 text-xs min-h-[34px]">
+    <div id="corelPropertyBar" class="adv-only px-3 py-1 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center gap-2 text-xs min-h-[34px]">
       <!-- Когда ничего не выделено: свойства документа -->
       <div id="propBarDocInfo" class="flex flex-wrap items-center gap-3 text-slate-600">
         <span class="font-bold text-slate-800">Документ:</span>
@@ -150,7 +157,132 @@
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- ОСНОВНОЕ РАБОЧЕЕ ОКНО: ЛЕВАЯ ПАНЕЛЬ CORELDRAW + ЦЕНТРАЛЬНЫЙ ХОЛСТ С ЛИНЕЙКАМИ + ПРАВЫЙ ИНСПЕКТОР РЕГЛЕТ -->
-  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+  <!-- ======================================================================== -->
+  <!-- УПРОЩЁННЫЙ ПОШАГОВЫЙ РЕЖИМ ДЛЯ БЫСТРОГО ЗАКАЗА                          -->
+  <!-- ======================================================================== -->
+  <div id="simpleModeShell" class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-100 min-h-0">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ: ШАБЛОНЫ, ТЕКСТ, ЛОГОТИП И ЦВЕТ -->
+    <aside class="w-full lg:w-[360px] xl:w-[390px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200 p-4 overflow-y-auto space-y-5 shrink-0">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-red-600">Шаг 1. Выберите стиль макета</span>
+          <button id="btnSimpleClearCanvas" class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline">Пустой лист</button>
+        </div>
+        <div id="simpleTemplatesGrid" class="grid grid-cols-2 gap-2"></div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 space-y-2.5">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-red-600">Шаг 2. Впишите ваши данные</div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="simpleFieldCompany">Название компании или бренда</label>
+          <input type="text" id="simpleFieldCompany" placeholder="Например: Кофейня «Бодрое утро»" class="w-full px-3 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="simpleFieldPerson">Имя, фамилия или главная услуга</label>
+          <input type="text" id="simpleFieldPerson" placeholder="Например: Руководитель отдела" class="w-full px-3 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="simpleFieldContacts">Телефон, мессенджер, сайт или адрес</label>
+          <input type="text" id="simpleFieldContacts" placeholder="+7 (999) 000-00-00" class="w-full px-3 py-2 text-sm bg-slate-50 focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 space-y-3">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-red-600">Шаг 3. Логотип и цвет</div>
+        <label class="w-full py-2.5 px-3 bg-sky-50 hover:bg-sky-100 border-2 border-dashed border-sky-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer text-xs font-bold text-sky-900 transition">
+          <span>🖼 Загрузить логотип или фото в 1 клик</span>
+          <input type="file" id="simpleInputUploadImg" accept="image/jpeg,image/png,image/webp,image/svg+xml" class="hidden" />
+        </label>
+        <div>
+          <span class="block text-xs font-semibold text-slate-700 mb-1.5">Быстрый цветовой акцент макета:</span>
+          <div id="simpleAccentSwatches" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ЦЕНТР: КРУПНЫЙ ХОЛСТ, ПОДСКАЗКИ И ЖИВОЙ МОКАП -->
+    <section class="flex-1 flex flex-col min-w-0 p-4 sm:p-6 overflow-y-auto items-center gap-4">
+      <div class="w-full max-w-2xl flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+        <div class="flex items-center gap-1.5">
+          <button data-simple-side="front" class="simple-side-btn px-3.5 py-1.5 text-xs font-extrabold rounded-lg bg-red-600 text-white shadow-2xs">Лицевая сторона</button>
+          <button data-simple-side="back" class="simple-side-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">Оборотная сторона</button>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btnSimpleAutoAlign" class="px-3 py-1.5 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition">✨ Выровнять красиво</button>
+          <button id="btnSimpleRotate" class="px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">↻ Повернуть</button>
+        </div>
+      </div>
+
+      <div class="flex-1 w-full flex flex-col items-center justify-center my-1">
+        <div id="simpleBackLockedMsg" class="hidden max-w-md bg-white p-6 rounded-2xl border border-slate-200 text-center shadow-sm space-y-2">
+          <div class="text-2xl">📄</div>
+          <div class="text-sm font-extrabold text-slate-900">Сейчас выбрана печать только с одной стороны</div>
+          <p class="text-xs text-slate-600">Нажмите кнопку ниже, чтобы сделать визитку или листовку двусторонней.</p>
+          <button id="btnSimpleEnableTwoSides" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg">Сделать двусторонней</button>
+        </div>
+
+        <div id="simpleCanvasStage" class="relative shadow-2xl rounded-sm overflow-hidden border border-slate-300 bg-white transition-all">
+          <div id="simpleObjectsLayer" class="absolute inset-0"></div>
+          <div id="simpleSafeHintBorder" class="absolute border border-dashed border-emerald-500/60 pointer-events-none"></div>
+        </div>
+        <div class="text-[11px] text-slate-500 mt-2">Подсказка: любой элемент на карточке можно подвинуть мышкой или пальцем</div>
+      </div>
+
+      <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div class="text-xs font-extrabold text-slate-800 mb-1.5">🩺 Проверка перед печатью</div>
+          <div id="simpleFriendlyPreflight" class="space-y-1.5 text-xs"></div>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col items-center justify-center">
+          <div class="text-[11px] font-bold text-slate-500 mb-1 w-full flex justify-between">
+            <span>Как будет выглядеть вживую:</span>
+            <span id="simpleMockupCaption" class="text-slate-700">90×50 мм</span>
+          </div>
+          <div id="simpleMockupContainer" class="w-full h-28 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ: ИЗДЕЛИЕ, БУМАГА, ОТДЕЛКА, ТИРАЖ И ЦЕНА -->
+    <aside class="w-full lg:w-[360px] xl:w-[390px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 p-4 overflow-y-auto space-y-4 shrink-0">
+      <div>
+        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">Что печатаем?</label>
+        <div id="simpleProductPresetsGrid" class="grid grid-cols-2 gap-1.5"></div>
+      </div>
+      <div>
+        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">Выберите бумагу или основу</label>
+        <div id="simpleMaterialsGrid" class="space-y-1.5"></div>
+      </div>
+      <div id="simpleFinishingBlock" class="space-y-3 pt-2 border-t border-slate-200">
+        <div>
+          <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">Защитная ламинация</label>
+          <div id="simpleLamButtons" class="grid grid-cols-2 gap-1.5"></div>
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">Тиснение фольгой</label>
+          <div id="simpleFoilButtons" class="grid grid-cols-3 gap-1.5"></div>
+        </div>
+        <div id="simpleCompatHint" class="hidden p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800"></div>
+      </div>
+      <div class="pt-2 border-t border-slate-200">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Сколько штук нужно?</label>
+          <span id="simpleUnitCost" class="text-xs font-semibold text-slate-500">0 ₽ / шт.</span>
+        </div>
+        <div id="simpleQtyButtons" class="grid grid-cols-4 gap-1.5"></div>
+      </div>
+      <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 space-y-3">
+        <div class="flex items-baseline justify-between">
+          <span class="text-sm font-bold text-emerald-950">Итого за заказ:</span>
+          <span id="simpleTotalPrice" class="text-2xl font-black text-emerald-900">0 ₽</span>
+        </div>
+        <button id="btnSimpleOrderAndPdf" class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white text-sm font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-2">🛒 Оформить и скачать PDF</button>
+      </div>
+    </aside>
+  </div>
+
+  <main id="advancedModeShell" class="hidden flex-1 flex flex-col lg:flex-row overflow-hidden">
 
     <!-- 2. ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ В СТИЛЕ CORELDRAW -->
     <nav aria-label="Панель инструментов CorelDRAW" class="bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-300 p-1.5 flex lg:flex-col items-center gap-1.5 shrink-0 z-30 overflow-x-auto">
@@ -645,6 +777,7 @@
   <script src="js/canvas.js"></script>
   <script src="js/mockup.js"></script>
   <script src="js/pdf.js"></script>
+  <script src="js/simple.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
 </body>

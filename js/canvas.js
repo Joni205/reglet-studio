@@ -4,6 +4,12 @@
  */
 function getPxPerMm() {
   const dims = getTrimDims();
+  if (AppState.ui.editorMode === 'simple') {
+    const holder = document.getElementById('simpleCanvasStage')?.parentElement;
+    const maxW = Math.min(480, holder?.clientWidth || window.innerWidth - 48);
+    const maxH = 290;
+    return Math.max(0.6, Math.min(maxW / dims.widthMm, maxH / dims.heightMm));
+  }
   const area = document.getElementById('canvasScrollArea');
   const availW = Math.max(260, (area?.clientWidth || 640) - 110);
   const availH = Math.max(200, (area?.clientHeight || 460) - 110);
@@ -369,11 +375,16 @@ function beginDragObject(e, obj) {
   e.stopPropagation();
   if (e.type === 'touchstart') e.preventDefault();
   AppState.ui.selectedId = obj.id;
-  renderLayersDocker();
+  if (AppState.ui.editorMode === 'simple') {
+    renderSimpleMode();
+  } else {
+    renderLayersDocker();
+    const dims = getTrimDims();
+    syncSelectionBoxAndPropertyBar(dims, getPxPerMm());
+    updateCorelRulers();
+  }
   const dims = getTrimDims();
   const pxPerMm = getPxPerMm();
-  syncSelectionBoxAndPropertyBar(dims, pxPerMm);
-  updateCorelRulers();
 
   const pt = getPointerXY(e);
   pushHistory();
@@ -431,7 +442,7 @@ function onGlobalPointerMove(e) {
   const hRuler = document.getElementById('horizontalRuler');
   const vRuler = document.getElementById('verticalRuler');
   const sheet = document.getElementById('documentSheetBleed');
-  if (hRuler && vRuler && sheet && AppState.ui.docView !== 'mockup3d') {
+  if (hRuler && vRuler && sheet && AppState.ui.editorMode === 'advanced' && AppState.ui.docView !== 'mockup3d') {
     const hRect = hRuler.getBoundingClientRect();
     const vRect = vRuler.getBoundingClientRect();
     const sRect = sheet.getBoundingClientRect();
@@ -507,7 +518,8 @@ function onGlobalPointerMove(e) {
     obj.rotation = deg;
   }
 
-  renderDocumentCanvas();
+  if (AppState.ui.editorMode === 'simple') renderSimpleMode();
+  else renderDocumentCanvas();
 }
 
 window.addEventListener('mouseup', () => {
