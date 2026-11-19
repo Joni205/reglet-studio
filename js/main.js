@@ -1,7 +1,7 @@
 /**
  * Точка входа: первичная отрисовка, стартовый шаблон и прогрев шрифтов.
  */
-window.onload = function () {
+document.addEventListener('DOMContentLoaded', function () {
   renderTemplatesGallery();
   bindAllEvents();
   // Применяем стартовый корпоративный шаблон визитки при запуске
@@ -13,4 +13,4 @@ window.onload = function () {
   loadVectorFont('Playfair Display', true);
   loadVectorFont('Playfair Display', true, true);
   loadVectorFont('Roboto Mono', true);
-};
+});
